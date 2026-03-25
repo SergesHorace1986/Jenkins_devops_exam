@@ -1,0 +1,19 @@
+replicaCount: 3
+
+movie_service:
+  image:
+    tag: main-13
+
+cast_service:
+  image:
+    tag: main-13
+
+service:
+  type: NodePort
+  nodePort: 30007
+  port: 80
+  targetPort: 8000
+
+imagePullSecrets:
+  - name: regcred
+  
