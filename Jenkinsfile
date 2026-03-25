@@ -6,6 +6,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS = 'DOCKER_HUB_PASS'
         GITHUB_CREDENTIALS    = 'github-creds'
         KUBECONFIG_CRED       = 'config'
+        BRANCH = "${env.BRANCH_NAME ?: 'main'}"
 
         MOVIE_IMAGE = "horacio1986/movie-service"
         CAST_IMAGE  = "horacio1986/cast-service"
@@ -46,7 +47,7 @@ pipeline {
                         echo "🔧 Building *Movie Service* image"
 
                         sh """
-                          docker build -t ${MOVIE_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER} movie-service/
+                          docker build -t ${MOVIE_IMAGE}:${BRANCH}-${env.BUILD_NUMBER} movie-service/
                         """
                     }
                 }
@@ -57,7 +58,7 @@ pipeline {
                         echo "🔧 Building *Cast Service* image"
 
                         sh """
-                          docker build -t ${CAST_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER} cast-service/
+                          docker build -t ${CAST_IMAGE}:${BRANCH}-${env.BUILD_NUMBER} cast-service/
                         """
                     }
                 }
@@ -76,8 +77,8 @@ pipeline {
                 )]) {
                     sh """
                       echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                      docker push ${MOVIE_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}
-                      docker push ${CAST_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}
+                      docker push ${MOVIE_IMAGE}:${BRANCH}-${env.BUILD_NUMBER}
+                      docker push ${CAST_IMAGE}:${BRANCH}-${env.BUILD_NUMBER}
                     """
                 }
             }
