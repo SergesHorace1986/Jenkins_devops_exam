@@ -100,13 +100,13 @@ pipeline {
                         if (env.BRANCH == "dev" || env.BRANCH == "main" || env.BRANCH.startsWith("feature/")) {
                             sh """
                               export KUBECONFIG=${config}
-                              helm version
-                              helm upgrade --install ./movie-platform \
+                              helm upgrade --install  movie-platform-dev ./movie-platform \
                                 -n dev \
                                 -f movie-platform/values-dev.yaml \
-                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                ${helmFlags}
+                                --set movie_service.image.tag=main-7 \
+                                --set cast_service.image.tag=main-7 \
+                                --atomic \
+                                --timeout 5m0s
                             """
                         }
 
