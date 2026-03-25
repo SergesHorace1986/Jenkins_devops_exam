@@ -103,10 +103,9 @@ pipeline {
                               helm upgrade --install  movie-platform-dev ./movie-platform \
                                 -n dev \
                                 -f movie-platform/values-dev.yaml \
-                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --atomic \
-                                --timeout 5m0s
+                                --set movie_service.image.tag=main-13 \
+                                --set cast_service.image.tag=main-13 \
+                                --timeout 15m0s
                             """
                         }
 
@@ -116,23 +115,21 @@ pipeline {
                               helm upgrade --install movie-platform-dev-qa ./movie-platform \
                                 -n qa \
                                 -f movie-platform/values-qa.yaml \
-                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --atomic \
-                                --timeout 5m0s
+                                --set movie_service.image.tag=main-13 \
+                                --set cast_service.image.tag=main-13 \
+                                --timeout 15m0s
                             """
                         }
 
                         if (env.BRANCH == "staging") {
                             sh """
-                              export KUBECONFIG=${config}
+                              export KUBECONFIG=$config
                               helm upgrade --install movie-platform-staging ./movie-platform \
                                 -n staging \
                                 -f movie-platform/values-staging.yaml \
-                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --atomic \
-                                --timeout 5m0s
+                                --set movie_service.image.tag=main-13 \
+                                --set cast_service.image.tag=main-13 \
+                                --timeout 15m0s
                             """
                         }
 
@@ -141,14 +138,13 @@ pipeline {
                                 input message: "Deploy to PRODUCTION?"
                             }
                             sh """
-                              export KUBECONFIG=${config}
+                              export KUBECONFIG=$config
                               helm upgrade --install movie-platform-prod ./movie-platform \
                                 -n prod \
                                 -f movie-platform/values-prod.yaml \
-                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                --atomic \
-                                --timeout 5m0s
+                                --set movie_service.image.tag=main-13 \
+                                --set cast_service.image.tag=main-13 \
+                                --timeout 15m0s
                             """
                         }
                     }
