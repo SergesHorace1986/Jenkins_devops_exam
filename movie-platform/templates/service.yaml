@@ -1,16 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "fastapiapp.fullname" . }}
+  name: {{ include "movie-platform.fullname" . }}
   labels:
-    {{- include "fastapiapp.labels" . | nindent 4 }}
+    {{- include "movie-platform.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
-      nodePort: {{ .Values.service.nodePort }}
+      targetPort: http
       protocol: TCP
       name: http
   selector:
-    {{- include "fastapiapp.selectorLabels" . | nindent 4 }}
+    {{- include "movie-platform.selectorLabels" . | nindent 4 }}
