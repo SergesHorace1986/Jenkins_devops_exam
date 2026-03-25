@@ -100,6 +100,7 @@ pipeline {
                         if (env.BRANCH == "dev" || env.BRANCH == "main" || env.BRANCH.startsWith("feature/")) {
                             sh """
                               export KUBECONFIG=${config}
+                              helm version
                               helm upgrade --install movie-platform-dev ./movie-platform \
                                 -n dev \
                                 -f movie-platform/values-dev.yaml \
@@ -108,7 +109,7 @@ pipeline {
                                 ${helmFlags}
                             """
                         }
-
+                        
                         if (env.BRANCH == "qa") {
                             sh """
                               export KUBECONFIG=${config}
