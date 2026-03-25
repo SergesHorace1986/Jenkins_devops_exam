@@ -19,22 +19,18 @@ pipeline {
         }
         stage('Build Started') {
             steps {
-                // slackSend(
-                //    channel: SLACK_CHANNEL,
-                //    tokenCredentialId: SLACK_CREDENTIAL,
-                    message: "🚀 Build started for *${env.JOB_NAME}* on branch *${env.BRANCH_NAME}* (#${env.BUILD_NUMBER})"
-                //)
+                echo "📥 Starting Checkout stage for ${env.JOB_NAME} #${env.BUILD_NUMBER}"
             }
         }
 
         stage('Checkout') {
-            steps {
-                //slackSend(channel: SLACK_CHANNEL, tokenCredentialId: SLACK_CREDENTIAL,
-                    message: "📥 Starting *Checkout* stage for ${env.JOB_NAME} #${env.BUILD_NUMBER}"
+            steps {    
+                
+                echo "📥 Starting Checkout stage for ${env.JOB_NAME} #${env.BUILD_NUMBER}"
 
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: "*/main"]],
+                    branches: [[name: "*/${env.BRANCH_NAME}"]],
                     userRemoteConfigs: [[
                         url: 'https://github.com/SergesHorace1986/Jenkins_devops_exam.git',
                         credentialsId: "${GITHUB_CREDENTIALS}"
@@ -48,8 +44,8 @@ pipeline {
 
                 stage('Build Movie Service') {
                     steps {
-                        // slackSend(channel: SLACK_CHANNEL, tokenCredentialId: SLACK_CREDENTIAL,
-                            message: "🔧 Building *Movie Service* image"
+
+                        echo "🔧 Building *Movie Service* image"
 
                         sh """
                           docker build -t ${MOVIE_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER} movie-service/
@@ -59,8 +55,8 @@ pipeline {
 
                 stage('Build Cast Service') {
                     steps {
-                        //slackSend(channel: SLACK_CHANNEL, tokenCredentialId: SLACK_CREDENTIAL,
-                            message: "🔧 Building *Cast Service* image"
+                        
+                        echo "🔧 Building *Cast Service* image"
 
                         sh """
                           docker build -t ${CAST_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER} cast-service/
@@ -72,8 +68,8 @@ pipeline {
 
         stage('Push Images') {
             steps {
-                // slackSend(channel: SLACK_CHANNEL, tokenCredentialId: SLACK_CREDENTIAL,
-                    message: "📤 Pushing Docker images to DockerHub"
+                
+                echo "📤 Pushing Docker images to DockerHub"
 
                 withCredentials([usernamePassword(
                     credentialsId: "${DOCKERHUB_CREDENTIALS}",
@@ -91,8 +87,8 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                //slackSend(channel: SLACK_CHANNEL, tokenCredentialId: SLACK_CREDENTIAL,
-                           message: "🚢 Starting *Helm Deployment* for branch ${env.BRANCH_NAME}"
+                
+                echo "🚢 Starting *Helm Deployment* for branch ${env.BRANCH_NAME}"
 
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'config')]) {
                     script {
@@ -156,20 +152,15 @@ pipeline {
 
     post {
         success {
-            //slackSend(
-                //channel: SLACK_CHANNEL,
-                //tokenCredentialId: SLACK_CREDENTIAL,
-                    message: "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} deployed from branch ${env.BRANCH_NAME}"
-            //)
+            
+            echo "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} deployed from branch ${env.BRANCH_NAME}"    
         }
         failure {
-            //slackSend(
-            //    channel: SLACK_CHANNEL,
-            //   tokenCredentialId: SLACK_CREDENTIAL,
-                    message: "❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} on branch ${env.BRANCH_NAME}"
-            //)
+            
+            echo "❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} on branch ${env.BRANCH_NAME}"  
         }
         always {
+            
             echo "Pipeline completed with status: ${currentBuild.currentResult}"
         }
     }
