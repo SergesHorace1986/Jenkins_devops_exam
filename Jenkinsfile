@@ -101,7 +101,7 @@ pipeline {
                             sh """
                               export KUBECONFIG=${config}
                               helm version
-                              helm upgrade --install movie-platform-dev ./movie-platform \
+                              helm upgrade --install ./movie-platform \
                                 -n dev \
                                 -f movie-platform/values-dev.yaml \
                                 --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
@@ -109,11 +109,11 @@ pipeline {
                                 ${helmFlags}
                             """
                         }
-                        
+
                         if (env.BRANCH == "qa") {
                             sh """
                               export KUBECONFIG=${config}
-                              helm upgrade --install movie-platform-qa ./movie-platform \
+                              helm upgrade --install ./movie-platform \
                                 -n qa \
                                 -f movie-platform/values-qa.yaml \
                                 --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
@@ -125,7 +125,7 @@ pipeline {
                         if (env.BRANCH == "staging") {
                             sh """
                               export KUBECONFIG=${config}
-                              helm upgrade --install movie-platform-staging ./movie-platform \
+                              helm upgrade --install ./movie-platform \
                                 -n staging \
                                 -f movie-platform/values-staging.yaml \
                                 --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
@@ -140,7 +140,7 @@ pipeline {
                             }
                             sh """
                               export KUBECONFIG=${config}
-                              helm upgrade --install movie-platform-prod ./movie-platform \
+                              helm upgrade --install ./movie-platform \
                                 -n prod \
                                 -f movie-platform/values-prod.yaml \
                                 --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
