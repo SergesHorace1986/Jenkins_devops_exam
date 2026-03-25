@@ -6,10 +6,14 @@ pipeline {
         DOCKERHUB_CREDENTIALS = 'DOCKER_HUB_PASS'
         GITHUB_CREDENTIALS    = 'github-creds'
         KUBECONFIG_CRED       = 'config'
-        BRANCH = "${env.BRANCH_NAME ?: 'main'}"
+        BRANCH = "${env.BRANCH_NAME ?: params.BRANCH ?: 'main'}"
 
         MOVIE_IMAGE = "horacio1986/movie-service"
         CAST_IMAGE  = "horacio1986/cast-service"
+    }
+
+    parameters {
+    string(name: 'BRANCH', defaultValue: 'main', description: 'Branch to deploy')
     }
 
     stages {
@@ -47,7 +51,7 @@ pipeline {
                         echo "🔧 Building *Movie Service* image"
 
                         sh """
-                          docker build -t ${MOVIE_IMAGE}:${BRANCH}-${env.BUILD_NUMBER} movie-service/
+                          docker build -t ${MOVIE_IMAGE}:${env.BRANCH}-${env.BUILD_NUMBER} movie-service/
                         """
                     }
                 }
@@ -58,7 +62,7 @@ pipeline {
                         echo "🔧 Building *Cast Service* image"
 
                         sh """
-                          docker build -t ${CAST_IMAGE}:${BRANCH}-${env.BUILD_NUMBER} cast-service/
+                          docker build -t ${CAST_IMAGE}:${env.BRANCH}-${env.BUILD_NUMBER} cast-service/
                         """
                     }
                 }
@@ -77,8 +81,8 @@ pipeline {
                 )]) {
                     sh """
                       echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                      docker push ${MOVIE_IMAGE}:${BRANCH}-${env.BUILD_NUMBER}
-                      docker push ${CAST_IMAGE}:${BRANCH}-${env.BUILD_NUMBER}
+                      docker push ${MOVIE_IMAGE}:${env.BRANCH}-${env.BUILD_NUMBER}
+                      docker push ${CAST_IMAGE}:${env.BRANCH}-${env.BUILD_NUMBER}
                     """
                 }
             }
@@ -87,49 +91,49 @@ pipeline {
         stage('Deploy') {
             steps {
                 
-                echo "🚢 Starting *Helm Deployment* for branch ${env.BRANCH_NAME}"
+                echo "🚢 Starting *Helm Deployment* for branch ${env.BRANCH}"
 
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'config')]) {
                     script {
                         def helmFlags = "--atomic --timeout 5m0s"
 
-                        if (env.BRANCH_NAME == "dev" || env.BRANCH_NAME == "main" || env.BRANCH_NAME.startsWith("feature/")) {
+                        if (env.BRANCH == "dev" || env.BRANCH == "main" || env.BRANCH.startsWith("feature/")) {
                             sh """
                               export KUBECONFIG=${config}
                               helm upgrade --install movie-platform-dev ./movie-platform \
                                 -n dev \
                                 -f movie-platform/values-dev.yaml \
-                                --set movie_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
+                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
+                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
                                 ${helmFlags}
                             """
                         }
 
-                        if (env.BRANCH_NAME == "qa") {
+                        if (env.BRANCH == "qa") {
                             sh """
                               export KUBECONFIG=${config}
                               helm upgrade --install movie-platform-qa ./movie-platform \
                                 -n qa \
                                 -f movie-platform/values-qa.yaml \
-                                --set movie_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
+                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
+                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
                                 ${helmFlags}
                             """
                         }
 
-                        if (env.BRANCH_NAME == "staging") {
+                        if (env.BRANCH == "staging") {
                             sh """
                               export KUBECONFIG=${config}
                               helm upgrade --install movie-platform-staging ./movie-platform \
                                 -n staging \
                                 -f movie-platform/values-staging.yaml \
-                                --set movie_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
+                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
+                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
                                 ${helmFlags}
                             """
                         }
 
-                        if (env.BRANCH_NAME == "main") {
+                        if (env.BRANCH == "main") {
                             timeout(time: 20, unit: 'MINUTES') {
                                 input message: "Deploy to PRODUCTION?"
                             }
@@ -138,8 +142,8 @@ pipeline {
                               helm upgrade --install movie-platform-prod ./movie-platform \
                                 -n prod \
                                 -f movie-platform/values-prod.yaml \
-                                --set movie_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
-                                --set cast_service.image.tag=${env.BRANCH_NAME}-${env.BUILD_NUMBER} \
+                                --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
+                                --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
                                 ${helmFlags}
                             """
                         }
@@ -152,11 +156,11 @@ pipeline {
     post {
         success {
             
-            echo "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} deployed from branch ${env.BRANCH_NAME}"    
+            echo "✅ SUCCESS: ${env.JOB_NAME} #${env.BUILD_NUMBER} deployed from branch ${env.BRANCH}"    
         }
         failure {
             
-            echo "❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} on branch ${env.BRANCH_NAME}"  
+            echo "❌ FAILURE: ${env.JOB_NAME} #${env.BUILD_NUMBER} on branch ${env.BRANCH}"  
         }
         always {
             
