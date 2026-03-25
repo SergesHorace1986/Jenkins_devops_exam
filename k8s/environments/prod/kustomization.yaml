@@ -1,3 +1,0 @@
-resources:
-  - ../../namespaces/prod.yaml
-  - ../../apps/my-app

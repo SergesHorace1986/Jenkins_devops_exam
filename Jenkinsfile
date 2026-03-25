@@ -95,7 +95,7 @@ pipeline {
 
                 withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'config')]) {
                     script {
-                        def helmFlags = "--atomic --timeout 5m0s"
+                        // def helmFlags = "--atomic --timeout 5m0s"
 
                         if (env.BRANCH == "dev" || env.BRANCH == "main" || env.BRANCH.startsWith("feature/")) {
                             sh """
@@ -118,7 +118,8 @@ pipeline {
                                 -f movie-platform/values-qa.yaml \
                                 --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
                                 --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                ${helmFlags}
+                                --atomic \
+                                --timeout 5m0s
                             """
                         }
 
@@ -130,7 +131,8 @@ pipeline {
                                 -f movie-platform/values-staging.yaml \
                                 --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
                                 --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                ${helmFlags}
+                                --atomic \
+                                --timeout 5m0s
                             """
                         }
 
@@ -145,7 +147,8 @@ pipeline {
                                 -f movie-platform/values-prod.yaml \
                                 --set movie_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
                                 --set cast_service.image.tag=${env.BRANCH}-${env.BUILD_NUMBER} \
-                                ${helmFlags}
+                                --atomic \
+                                --timeout 5m0s
                             """
                         }
                     }

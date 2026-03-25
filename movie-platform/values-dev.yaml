@@ -1,0 +1,7 @@
+movie_service:
+  image:
+    tag: main-11
+
+cast_service:
+  image:
+    tag: main-11

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cast-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cast-service
+  template:
+    metadata:
+      labels:
+        app: cast-service
+    spec:
+      containers:
+      - name: cast-service
+        image: cast-service:{{ .Values.cast_service.image.tag }}
+        ports:
+        - containerPort: 8080
