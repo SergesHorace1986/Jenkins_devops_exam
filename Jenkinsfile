@@ -3,14 +3,14 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = 'dockerhub-creds'
+        DOCKERHUB_CREDENTIALS = 'DOCKER_HUB_PASS'
         GITHUB_CREDENTIALS    = 'github-creds'
-        KUBECONFIG_CRED       = 'kubeconfig'
+        KUBECONFIG_CRED       = 'config'
         SLACK_CREDENTIAL      = 'slack-token'
         SLACK_CHANNEL         = '#deployment'
 
-        MOVIE_IMAGE = "rxteot/movie-service"
-        CAST_IMAGE  = "rxteot/cast-service"
+        MOVIE_IMAGE = "horacio1986/movie-service"
+        CAST_IMAGE  = "horacio1986/cast-service"
     }
 
     stages {
@@ -38,7 +38,7 @@ pipeline {
                     $class: 'GitSCM',
                     branches: [[name: "*/${env.BRANCH_NAME}"]],
                     userRemoteConfigs: [[
-                        url: 'https://github.com/rxteot/Jenkins_devops_exams.git',
+                        url: 'https://github.com/SergesHorace1986/Jenkins_devops_exam.git',
                         credentialsId: "${GITHUB_CREDENTIALS}"
                     ]]
                 ])
@@ -79,11 +79,11 @@ pipeline {
 
                 withCredentials([usernamePassword(
                     credentialsId: "${DOCKERHUB_CREDENTIALS}",
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
+                    usernameVariable: 'horacio1986',
+                    passwordVariable: 'DOCKER_HUB_PASS'
                 )]) {
                     sh """
-                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                      echo "$DOCKER_HUB_PASS" | docker login -u "$horacio1986" --password-stdin
                       docker push ${MOVIE_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}
                       docker push ${CAST_IMAGE}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}
                     """
@@ -96,13 +96,13 @@ pipeline {
                 slackSend(channel: SLACK_CHANNEL, tokenCredentialId: SLACK_CREDENTIAL,
                           message: "🚢 Starting *Helm Deployment* for branch ${env.BRANCH_NAME}")
 
-                withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'KUBECONFIG')]) {
+                withCredentials([file(credentialsId: "${KUBECONFIG_CRED}", variable: 'config')]) {
                     script {
                         def helmFlags = "--atomic --timeout 5m0s"
 
                         if (env.BRANCH_NAME == "dev" || env.BRANCH_NAME == "main" || env.BRANCH_NAME.startsWith("feature/")) {
                             sh """
-                              export KUBECONFIG=${KUBECONFIG}
+                              export config=${config}
                               helm upgrade --install movie-platform-dev ./movie-platform \
                                 -n dev \
                                 -f movie-platform/values-dev.yaml \
@@ -114,7 +114,7 @@ pipeline {
 
                         if (env.BRANCH_NAME == "qa") {
                             sh """
-                              export KUBECONFIG=${KUBECONFIG}
+                              export config=${config}
                               helm upgrade --install movie-platform-qa ./movie-platform \
                                 -n qa \
                                 -f movie-platform/values-qa.yaml \
@@ -126,7 +126,7 @@ pipeline {
 
                         if (env.BRANCH_NAME == "staging") {
                             sh """
-                              export KUBECONFIG=${KUBECONFIG}
+                              export config=${config}
                               helm upgrade --install movie-platform-staging ./movie-platform \
                                 -n staging \
                                 -f movie-platform/values-staging.yaml \
@@ -141,7 +141,7 @@ pipeline {
                                 input message: "Deploy to PRODUCTION?"
                             }
                             sh """
-                              export KUBECONFIG=${KUBECONFIG}
+                              export config=${config}
                               helm upgrade --install movie-platform-prod ./movie-platform \
                                 -n prod \
                                 -f movie-platform/values-prod.yaml \
